@@ -80,19 +80,61 @@ func (s *SmartContract) Invoke(APIstub shim.ChaincodeStubInterface) sc.Response 
 		return s.queryClaimsById(APIstub, args)
 	} else if function == "createId" {
 		return s.createId(APIstub, args)
-	} else if function == "requestAttest" {
-		return s.requestAttest(APIstub, args)
-	} else if function == "attest" {
-		return s.attest(APIstub, args)
+	} else if function == "requestAttestation" {
+		return s.requestAttestation(APIstub, args)
+	} else if function == "createAttestion" {
+		return s.createAttestion(APIstub, args)
+	} else if function == "shareinfo" {
+		return s.shareinfo(APIstub, args)
 	}
 
 	return shim.Error("Invalid Smart Contract function name.")
 }
 
 /*
+ * SHAREINFORMATION
+ * args: 0 => (idClient), 1 => (attester), 2 => (ClaimName), 3 => (token), 4 => (validDays)
+ */
+func (s *SmartContract) shareinfo(APIstub shim.ChaincodeStubInterface, args []string) sc.Response {
+
+	if len(args) != 5 {
+	   return shim.Error("Incorrect number of arguments. Expecting 5")
+  }
+
+	//get state of AttesterRequest and validate if existe user or not
+  idAsBytes, ok := APIstub.GetState(args[0])
+	
+	if ok {
+		id := ID{}
+	  json.Unmarshal(idAsBytes, &id)
+    // if not exist then create the object
+		if id.Infoshared == nil {
+			id.Infoshared = make(map[string]map[string]Credential)
+		}
+    // if not exist then create the object key
+		_, ok2 := id.Infoshared[args[1]]
+		if !ok2 {
+			id.Infoshared[args[1]] = make(map[string]Credential)
+		}
+    // parse to integer the validDays
+    validDays, _ := strconv.Atoi(args[4])
+		id.Infoshared[args[1]][args[2]] = Credential {Token: args[3], ValidDay: validDays}
+    //parse to bytes and save state
+		idAsBytes, _ := json.Marshal(id)
+		APIstub.PutState(args[0], idAsBytes)
+
+		return shim.Success(nil)
+	} else {
+		return shim.Error("User Not Found!")
+	}
+
+}
+
+/*
+ * SAVE ATTESTATION
  * args: 0 => (idAttester), 1 => (idClient), 2 => (ClaimName), 3 => (hashClaim)
  */
-func (s *SmartContract) attest(APIstub shim.ChaincodeStubInterface, args []string) sc.Response {
+func (s *SmartContract) createAttestion(APIstub shim.ChaincodeStubInterface, args []string) sc.Response {
 
 	if len(args) != 4 {
 		return shim.Error("Incorrect number of arguments. Expecting 4")
@@ -139,9 +181,10 @@ func (s *SmartContract) attest(APIstub shim.ChaincodeStubInterface, args []strin
 }
 
 /*
+ * REQUEST ATTESTATION
  * args: 0 => (idAttester), 1 => (idClient), 2 => (ClaimName), 3 => (ClaimUrl)
  */
-func (s *SmartContract) requestAttest(APIstub shim.ChaincodeStubInterface, args []string) sc.Response {
+func (s *SmartContract) requestAttestation(APIstub shim.ChaincodeStubInterface, args []string) sc.Response {
 
 	if len(args) != 4 {
 		return shim.Error("Incorrect number of arguments. Expecting 4")
