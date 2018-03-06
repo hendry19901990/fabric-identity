@@ -43,7 +43,7 @@ type SmartContract struct {
 }
 
 type AttestClaim struct{
- claim map[string]map[string]string `json:"claim"`
+ Claim map[string]map[string]string `json:"claim"`
 }
 
 type Credential struct {
@@ -55,6 +55,9 @@ type ID struct {
     Claims       map[string]string `json:"claims"`
     Infoshared   map[string]map[string]Credential `json:"infoshared"`
 }
+
+const REQUEST = "requestAttest_"
+const ATTEST = "attester_"
 
 /*
  * The Init method is called when the Smart Contract "fabcar" is instantiated by the blockchain network
@@ -77,9 +80,98 @@ func (s *SmartContract) Invoke(APIstub shim.ChaincodeStubInterface) sc.Response 
 		return s.queryClaimsById(APIstub, args)
 	} else if function == "createId" {
 		return s.createId(APIstub, args)
+	} else if function == "requestAttest" {
+		return s.requestAttest(APIstub, args)
+	} else if function == "attest" {
+		return s.attest(APIstub, args)
 	}
 
 	return shim.Error("Invalid Smart Contract function name.")
+}
+
+/*
+ * args: 0 => (idAttester), 1 => (idClient), 2 => (ClaimName), 3 => (hashClaim)
+ */
+func (s *SmartContract) attest(APIstub shim.ChaincodeStubInterface, args []string) sc.Response {
+
+	if len(args) != 4 {
+		return shim.Error("Incorrect number of arguments. Expecting 4")
+	}
+  // index to save and search into state
+  attestationsIndex  := ATTEST  + args[0]
+	idAttesterRequest  := REQUEST + args[0]
+	//get state of AttesterRequest
+  requestAsBytes, ok := APIstub.GetState(idAttesterRequest)
+  requestObj := AttestClaim{Claim: make(map[string]map[string]string)}
+  //if exist key decode Json to Object
+	if ok {
+     json.Unmarshal(requestAsBytes, &requestObj)
+	}else {
+		return shim.Error("Request of Attestation not Found!")
+	}
+  // get state of attestations
+  attestationsAsBytes, ok2 := APIstub.GetState(attestationsIndex)
+  attestationsObj := AttestClaim{Claim: make(map[string]map[string]string)}
+  //if exist key decode Json to Object
+  if ok2 {
+		json.Unmarshal(attestationsAsBytes, &attestationsObj)
+	}
+  // if no exist then create the mapping
+	if attestationsObj.Claim == nil{
+		attestationsObj.Claim = make(map[string]map[string]string)
+	}
+  // valid if existe the Claim mapping
+	_, exist = attestationsObj.Claim[args[1]]
+	if !exist {
+		attestationsObj.Claim[args[1]] = make(map[string]string)
+	}
+	//set the hash of the attestation
+	attestationsObj.Claim[args[1]][args[2]] = args[3]
+  //remove the key of that attestation
+	delete(requestObj.Claim[args[1]], args[2])
+	requestAsBytesFinal, _ := json.Marshal(requestObj)
+	APIstub.PutState(idAttesterRequest, requestAsBytesFinal)
+  //save the new attestation
+	attestationsAsBytesFinal, _ := json.Marshal(attestationsObj)
+	APIstub.PutState(attestationsIndex, attestationsAsBytesFinal)
+
+  return shim.Success(nil)
+}
+
+/*
+ * args: 0 => (idAttester), 1 => (idClient), 2 => (ClaimName), 3 => (ClaimUrl)
+ */
+func (s *SmartContract) requestAttest(APIstub shim.ChaincodeStubInterface, args []string) sc.Response {
+
+	if len(args) != 4 {
+		return shim.Error("Incorrect number of arguments. Expecting 4")
+	}
+  // index to save and search into state
+  idAttesterRequest := REQUEST + args[0]
+	requestAsBytes, ok := APIstub.GetState(idAttesterRequest)
+  requestObj := AttestClaim{Claim: make(map[string]map[string]string)}
+
+	if ok {
+     json.Unmarshal(requestAsBytes, &requestObj)
+     if requestObj.Claim == nil{
+			 requestObj.Claim = make(map[string]map[string]string)
+		 }
+
+		 _, exist = requestObj.Claim[args[1]]
+		 if !exist {
+			 requestObj.Claim[args[1]] = make(map[string]string)
+		 }
+
+		 requestObj.Claim[args[1]][args[2]] = args[3]
+	}else{
+     requestObj.Claim[args[1]] = make(map[string]string)
+		 requestObj.Claim[args[1]][args[2]] = args[3]
+	}
+
+  requestAsBytesFinal, _ := json.Marshal(requestObj)
+	APIstub.PutState(idAttesterRequest, requestAsBytesFinal)
+
+	return shim.Success(nil)
 }
 
 func (s *SmartContract) createId(APIstub shim.ChaincodeStubInterface, args []string) sc.Response {
