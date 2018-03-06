@@ -103,7 +103,7 @@ func (s *SmartContract) shareinfo(APIstub shim.ChaincodeStubInterface, args []st
 
 	//get state of AttesterRequest and validate if existe user or not
   idAsBytes, ok := APIstub.GetState(args[0])
-	
+
 	if ok {
 		id := ID{}
 	  json.Unmarshal(idAsBytes, &id)
