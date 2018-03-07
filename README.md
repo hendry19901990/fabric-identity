@@ -1,4 +1,4 @@
-## Hyperledger Fabric Samples
+## Hyperledger Fabric Applied to Identity
 
 Please visit the [installation instructions](http://hyperledger-fabric.readthedocs.io/en/latest/samples.html).
 
