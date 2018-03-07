@@ -86,6 +86,10 @@ func (s *SmartContract) Invoke(APIstub shim.ChaincodeStubInterface) sc.Response 
 		return s.createAttestion(APIstub, args)
 	} else if function == "shareinfo" {
 		return s.shareinfo(APIstub, args)
+	} else if function == "queryRequestAttestation" {
+		return s.queryRequestAttestation(APIstub, args)
+	} else if function == "queryAttestation" {
+		return s.queryAttestation(APIstub, args)
 	}
 
 	return shim.Error("Invalid Smart Contract function name.")
@@ -128,6 +132,49 @@ func (s *SmartContract) shareinfo(APIstub shim.ChaincodeStubInterface, args []st
 		return shim.Error("User Not Found!")
 	}
 
+}
+
+/*
+ * QUERY ALL ATTESTATION
+ * args: 0 => (idAttester)
+ */
+func (s *SmartContract) queryAttestation(APIstub shim.ChaincodeStubInterface, args []string) sc.Response {
+
+	if len(args) != 1 {
+	  return shim.Error("Incorrect number of arguments. Expecting 1")
+  }
+	// index of state all ATTESTATION
+  attestationsIndex  := ATTEST  + args[0]
+  // get the state
+	requestAsBytes, ok := APIstub.GetState(attestationsIndex)
+	if ok {
+      requestObj := AttestClaim{Claim: make(map[string]map[string]string)}
+			json.Unmarshal(requestAsBytes, &requestObj)
+			if requestObj.Claim == nil {
+          badResult := []byte(`{"error": "There are not request Attestations"}`)
+					return shim.Success(badResult)
+			}
+			// buffer is a JSON array containing QueryResults
+			var buffer bytes.Buffer
+			i := 0
+			buffer.WriteString("[")
+			for user, _ := range requestObj.Claim {
+			   jsonData, _ := json.Marshal(requestObj.Claim[user])
+         jsonResp := "{\"user\": \"" +  user + "\", \"claims\":" + string(jsonData) + "}"
+				 buffer.WriteString(jsonResp)
+         if i < len(requestObj.Claim)-1 {
+					 buffer.WriteString(", ")
+				 }
+				 i++
+		  }
+			buffer.WriteString("]")
+			fmt.Printf("- queryAllCars:\n%s\n", buffer.String())
+
+			return shim.Success(buffer.Bytes())
+	} else {
+		 badResult := []byte(`{"error": "There are not request Attestations"}`)
+		 return shim.Success(badResult)
+	}
 }
 
 /*
@@ -178,6 +225,49 @@ func (s *SmartContract) createAttestion(APIstub shim.ChaincodeStubInterface, arg
 	APIstub.PutState(attestationsIndex, attestationsAsBytesFinal)
 
   return shim.Success(nil)
+}
+
+/*
+ * QUERY ALL REQUEST ATTESTATION
+ * args: 0 => (idAttester)
+ */
+func (s *SmartContract) queryRequestAttestation(APIstub shim.ChaincodeStubInterface, args []string) sc.Response {
+
+	if len(args) != 1 {
+	  return shim.Error("Incorrect number of arguments. Expecting 1")
+  }
+	// index of state REQUEST ATTESTATION
+  idAttesterRequest := REQUEST + args[0]
+  // get the state
+	requestAsBytes, ok := APIstub.GetState(idAttesterRequest)
+	if ok {
+      requestObj := AttestClaim{Claim: make(map[string]map[string]string)}
+			json.Unmarshal(requestAsBytes, &requestObj)
+			if requestObj.Claim == nil {
+          badResult := []byte(`{"error": "There are not request Attestations"}`)
+					return shim.Success(badResult)
+			}
+			// buffer is a JSON array containing QueryResults
+			var buffer bytes.Buffer
+			i := 0
+			buffer.WriteString("[")
+			for user, _ := range requestObj.Claim {
+			   jsonData, _ := json.Marshal(requestObj.Claim[user])
+         jsonResp := "{\"user\": \"" +  user + "\", \"claims\":" + string(jsonData) + "}"
+				 buffer.WriteString(jsonResp)
+         if i < len(requestObj.Claim)-1 {
+					 buffer.WriteString(", ")
+				 }
+				 i++
+		  }
+			buffer.WriteString("]")
+			fmt.Printf("- queryAllCars:\n%s\n", buffer.String())
+
+			return shim.Success(buffer.Bytes())
+	} else {
+		 badResult := []byte(`{"error": "There are not request Attestations"}`)
+		 return shim.Success(badResult)
+	}
 }
 
 /*
