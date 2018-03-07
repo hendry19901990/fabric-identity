@@ -33,6 +33,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"strconv"
+	"crypto/rand"
 
 	"github.com/hyperledger/fabric/core/chaincode/shim"
 	sc "github.com/hyperledger/fabric/protos/peer"
@@ -92,6 +93,8 @@ func (s *SmartContract) Invoke(APIstub shim.ChaincodeStubInterface) sc.Response 
 		return s.queryAttestation(APIstub, args)
 	} else if function == "removeUser" {
 		return s.removeUser(APIstub, args)
+	} else if function == "initLedger" {
+		return s.initLedger(APIstub)
 	}
 
 	return shim.Error("Invalid Smart Contract function name.")
@@ -368,7 +371,34 @@ func (s *SmartContract) queryClaimsById(APIstub shim.ChaincodeStubInterface, arg
 	}
 }
 
+func (s *SmartContract) initLedger(APIstub shim.ChaincodeStubInterface) sc.Response {
+  for i := 1; i < 10; i++ {
+		 u := pseudo_uuid()
+     id: ID {Claims: map[string]string{"fullname": "name"+strconv.Itoa(i), "docid": u}, Infoshared: make(map[string]map[string]Credential)}
+		 id.Infoshared["fullname"] = make(map[string]Credential)
+     id.Infoshared["fullname"]["GOOGLE"]    = Credential{Token: "token1", ValidDay: 30}
+     id.Infoshared["fullname"]["FACEBOOK"]  = Credential{Token: "token2", ValidDay: 60}
 
+		 idAsBytes, _ := json.Marshal(id)
+	 	 APIstub.PutState("ID"+strconv.Itoa(i), idAsBytes)
+	}
+  return shim.Success(nil)
+}
+
+// generate random id to test
+func pseudo_uuid() (uuid string) {
+
+    b := make([]byte, 16)
+    _, err := rand.Read(b)
+    if err != nil {
+        fmt.Println("Error: ", err)
+        return
+    }
+
+    uuid = fmt.Sprintf("%X%X%X%X%X", b[0:4], b[4:6], b[6:8], b[8:10], b[10:])
+
+    return
+}
 
 // The main function is only relevant in unit test mode. Only included here for completeness.
 func main() {
