@@ -1,6 +1,13 @@
 ## Hyperledger Fabric Applied to Identity
 
-Please visit the [installation instructions](http://hyperledger-fabric.readthedocs.io/en/latest/samples.html).
+How to test
+
+```
+  cd id
+  docker rm -f $(docker ps -aq)
+  docker network prune
+  chmod 777 start.sh && ./start.sh
+```
 
 ## License <a name="license"></a>
 
