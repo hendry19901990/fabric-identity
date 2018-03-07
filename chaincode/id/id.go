@@ -68,7 +68,7 @@ func (s *SmartContract) Init(APIstub shim.ChaincodeStubInterface) sc.Response {
 }
 
 /*
- * The Invoke method is called as a result of an application request to run the Smart Contract "fabcar"
+ * The Invoke method is called as a result of an application request to run the Smart Contract "Identity"
  * The calling application program has also specified the particular smart contract function to be called, with arguments
  */
 func (s *SmartContract) Invoke(APIstub shim.ChaincodeStubInterface) sc.Response {
@@ -90,6 +90,8 @@ func (s *SmartContract) Invoke(APIstub shim.ChaincodeStubInterface) sc.Response 
 		return s.queryRequestAttestation(APIstub, args)
 	} else if function == "queryAttestation" {
 		return s.queryAttestation(APIstub, args)
+	} else if function == "removeUser" {
+		return s.removeUser(APIstub, args)
 	}
 
 	return shim.Error("Invalid Smart Contract function name.")
@@ -307,6 +309,29 @@ func (s *SmartContract) requestAttestation(APIstub shim.ChaincodeStubInterface, 
 	return shim.Success(nil)
 }
 
+/*
+ * Remove user from State
+ * Args: 0 => "userid or hashId"
+ */
+func (s *SmartContract) removeUser(APIstub shim.ChaincodeStubInterface, args []string) sc.Response {
+	if len(args) != 1 {
+		return shim.Error("Incorrect number of arguments. Expecting 1")
+	}
+  // search the user by id
+	idAsBytes, ok := APIstub.GetState(args[0])
+  // if it's found then remove it else return error
+	if ok {
+     APIstub.DelState(args[0])
+		 return shim.Error("User not exist! :(")
+	} else {
+     return shim.Error("User not exist! :(")
+	}
+}
+
+/*
+ *  create a User Identity
+ *  Args: 0 => "userid or hashId", 1 => "fullname", 2 => "docid"
+ */
 func (s *SmartContract) createId(APIstub shim.ChaincodeStubInterface, args []string) sc.Response {
 
 	if len(args) != 3 {
