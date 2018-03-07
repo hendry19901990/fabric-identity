@@ -95,6 +95,8 @@ func (s *SmartContract) Invoke(APIstub shim.ChaincodeStubInterface) sc.Response 
 		return s.removeUser(APIstub, args)
 	} else if function == "initLedger" {
 		return s.initLedger(APIstub)
+	} else if function == "getUserById"{
+		return s.getUserById(APIstub, args)
 	}
 
 	return shim.Error("Invalid Smart Contract function name.")
@@ -113,7 +115,7 @@ func (s *SmartContract) shareinfo(APIstub shim.ChaincodeStubInterface, args []st
 	//get state of AttesterRequest and validate if existe user or not
   idAsBytes, ok := APIstub.GetState(args[0])
 
-	if ok != nil {
+	if ok == nil {
 		id := ID{}
 	  json.Unmarshal(idAsBytes, &id)
     // if not exist then create the object
@@ -152,7 +154,7 @@ func (s *SmartContract) queryAttestation(APIstub shim.ChaincodeStubInterface, ar
   attestationsIndex  := ATTEST  + args[0]
   // get the state
 	requestAsBytes, ok := APIstub.GetState(attestationsIndex)
-	if ok != nil {
+	if ok == nil {
       requestObj := AttestClaim{Claim: make(map[string]map[string]string)}
 			json.Unmarshal(requestAsBytes, &requestObj)
 			if requestObj.Claim == nil {
@@ -198,7 +200,7 @@ func (s *SmartContract) createAttestion(APIstub shim.ChaincodeStubInterface, arg
   requestAsBytes, ok := APIstub.GetState(idAttesterRequest)
   requestObj := AttestClaim{Claim: make(map[string]map[string]string)}
   //if exist key decode Json to Object
-	if ok != nil  {
+	if ok == nil  {
      json.Unmarshal(requestAsBytes, &requestObj)
 	}else {
 		return shim.Error("Request of Attestation not Found!")
@@ -207,7 +209,7 @@ func (s *SmartContract) createAttestion(APIstub shim.ChaincodeStubInterface, arg
   attestationsAsBytes, ok2 := APIstub.GetState(attestationsIndex)
   attestationsObj := AttestClaim{Claim: make(map[string]map[string]string)}
   //if exist key decode Json to Object
-  if ok2 != nil  {
+  if ok2 == nil  {
 		json.Unmarshal(attestationsAsBytes, &attestationsObj)
 	}
   // if no exist then create the mapping
@@ -246,7 +248,7 @@ func (s *SmartContract) queryRequestAttestation(APIstub shim.ChaincodeStubInterf
   idAttesterRequest := REQUEST + args[0]
   // get the state
 	requestAsBytes, ok := APIstub.GetState(idAttesterRequest)
-	if ok != nil{
+	if ok == nil{
       requestObj := AttestClaim{Claim: make(map[string]map[string]string)}
 			json.Unmarshal(requestAsBytes, &requestObj)
 			if requestObj.Claim == nil {
@@ -290,7 +292,7 @@ func (s *SmartContract) requestAttestation(APIstub shim.ChaincodeStubInterface, 
 	requestAsBytes, ok := APIstub.GetState(idAttesterRequest)
   requestObj := AttestClaim{Claim: make(map[string]map[string]string)}
 
-	if ok  != nil {
+	if ok  == nil {
      json.Unmarshal(requestAsBytes, &requestObj)
      if requestObj.Claim == nil{
 			 requestObj.Claim = make(map[string]map[string]string)
@@ -324,9 +326,9 @@ func (s *SmartContract) removeUser(APIstub shim.ChaincodeStubInterface, args []s
   // search the user by id
 	_, ok := APIstub.GetState(args[0])
   // if it's found then remove it else return error
-	if ok != nil {
+	if ok == nil {
      APIstub.DelState(args[0])
-		 return shim.Error("User not exist! :(")
+		 return shim.Error("User removed successfully!!!")
 	} else {
      return shim.Error("User not exist! :(")
 	}
@@ -352,6 +354,28 @@ func (s *SmartContract) createId(APIstub shim.ChaincodeStubInterface, args []str
 	return shim.Success(nil)
 }
 
+/*
+ * get User By Id
+ * (0) => "iduser"
+ */
+func (s *SmartContract) getUserById(APIstub shim.ChaincodeStubInterface, args []string) sc.Response {
+
+	if len(args) != 1 {
+		return shim.Error("Incorrect number of arguments. Expecting 1")
+	}
+
+	idAsBytes, ok := APIstub.GetState(args[0])
+	if ok == nil {
+     return shim.Success(idAsBytes)
+	}else{
+			return shim.Error("User not exist! :(")
+	}
+}
+
+/*
+ * get Claims By Id
+ * (0) => "iduser"
+ */
 func (s *SmartContract) queryClaimsById(APIstub shim.ChaincodeStubInterface, args []string) sc.Response {
 
 	if len(args) != 1 {
@@ -361,7 +385,7 @@ func (s *SmartContract) queryClaimsById(APIstub shim.ChaincodeStubInterface, arg
   id := ID{}
 	idAsBytes, ok := APIstub.GetState(args[0])
 
-	if ok != nil {
+	if ok == nil {
 		  json.Unmarshal(idAsBytes, &id)
 			jsonData, _ := json.Marshal(id.Claims)
       jsonResp := "{\"user\": \"" +  args[0] + "\", \"claims\":" + string(jsonData) + "}"
@@ -374,8 +398,8 @@ func (s *SmartContract) queryClaimsById(APIstub shim.ChaincodeStubInterface, arg
 
 func (s *SmartContract) initLedger(APIstub shim.ChaincodeStubInterface) sc.Response {
   for i := 1; i < 10; i++ {
-		 u := pseudo_uuid()
-     id:= ID {Claims: map[string]string{"fullname": "name"+strconv.Itoa(i), "docid": u}, Infoshared: make(map[string]map[string]Credential)}
+		 u  := pseudo_uuid()
+     id := ID {Claims: map[string]string{"fullname": "name"+strconv.Itoa(i), "docid": u}, Infoshared: make(map[string]map[string]Credential)}
 		 id.Infoshared["fullname"] = make(map[string]Credential)
      id.Infoshared["fullname"]["GOOGLE"]    = Credential{Token: "token1", ValidDay: 30}
      id.Infoshared["fullname"]["FACEBOOK"]  = Credential{Token: "token2", ValidDay: 60}
