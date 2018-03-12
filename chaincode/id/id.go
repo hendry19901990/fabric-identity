@@ -344,6 +344,12 @@ func (s *SmartContract) createId(APIstub shim.ChaincodeStubInterface, args []str
 		return shim.Error("Incorrect number of arguments. Expecting 3")
 	}
 
+	_, exist := APIstub.GetState(args[0])
+
+	if exist != nil {
+		 return shim.Error("User already exist!!!")
+	}
+
 	id := ID {Claims: make(map[string]string), Infoshared: make(map[string]map[string]Credential)}
 	id.Claims["fullname"] = args[1]
   id.Claims["docid"]    = args[2]
