@@ -81,6 +81,8 @@ func (s *SmartContract) Invoke(APIstub shim.ChaincodeStubInterface) sc.Response 
 		return s.queryClaimsById(APIstub, args)
 	} else if function == "createId" {
 		return s.createId(APIstub, args)
+	} else if function == "addClaim" {
+		return s.addClaim(APIstub, args)
 	} else if function == "requestAttestation" {
 		return s.requestAttestation(APIstub, args)
 	} else if function == "createAttestion" {
@@ -331,6 +333,30 @@ func (s *SmartContract) removeUser(APIstub shim.ChaincodeStubInterface, args []s
 		 return shim.Error("User removed successfully!!!")
 	} else {
      return shim.Error("User not exist! :(")
+	}
+}
+
+/*
+ * add Claim of User
+ * Args: 0 => "userid or hashId", 1 => "key of claim", 2 => "value of Claim"
+ */
+func (s *SmartContract) addClaim(APIstub shim.ChaincodeStubInterface, args []string) sc.Response {
+	if len(args) != 3 {
+		return shim.Error("Incorrect number of arguments. Expecting 3")
+	}
+
+	requestIdAsBytes, ok := APIstub.GetState(args[0])
+  // validate if user exist
+	if ok == nil {
+     id := ID{}
+     json.Unmarshal(requestIdAsBytes, &id)
+     id.Claims[args[1]]  = args[2]
+		 idAsBytes, _ := json.Marshal(id)
+	 	 APIstub.PutState(args[0], idAsBytes)
+
+	 	 return shim.Success(nil)
+	} else {
+		return shim.Error("User not exist!!!")
 	}
 }
 
