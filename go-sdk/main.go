@@ -44,7 +44,7 @@ var resetArgs = [][]byte{[]byte("a"), []byte("100"), []byte("b"), []byte(Example
 
 //TODO Args
 func queryCC(client *channel.Client, targetEndpoints ...string) []byte {
-  response, err := client.Query(channel.Request{ChaincodeID: ccID, Fcn: "invoke", Args: ExampleCCDefaultQueryArgs()},
+  response, err := client.Query(channel.Request{ChaincodeID: ccID, Fcn: "query", Args: ExampleCCDefaultQueryArgs()},
     channel.WithRetry(retry.DefaultChannelOpts),
     channel.WithTargetEndpoints(targetEndpoints...),
   )
