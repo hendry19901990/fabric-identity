@@ -32,7 +32,7 @@ async function main() {
         const contract = network.getContract('mycc');
 
         // Evaluate the specified transaction.
-        const result = await contract.evaluateTransaction("invoke","query","137");
+        const result = await contract.evaluateTransaction("invoke","query","9_200");
         console.log(`Transaction has been evaluated, result is: ${result.toString()}`);
 
     } catch (error) {
