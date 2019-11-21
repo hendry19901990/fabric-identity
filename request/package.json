@@ -16,6 +16,7 @@
     "license": "Apache-2.0",
     "dependencies": {
         "fabric-ca-client": "unstable",
+        "fabric-client": "~1.4.0",
         "fabric-network": "unstable"
     },
     "devDependencies": {
