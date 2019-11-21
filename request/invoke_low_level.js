@@ -40,7 +40,7 @@ async function invoke() {
 		// This sample application uses a file based key value stores to hold
 		// the user information and credentials. These are the same stores as used
 		// by the 'registerUser.js' sample code
-		const store_path = path.join(process.cwd(),  'wallet');
+		const store_path = path.join(__dirname,  'hfc-key-store');
 		console.log('Setting up the user store at path:'+store_path);
 		// create the key value store as defined in the fabric-client/config/default.json 'key-value-store' setting
 		const state_store = await Fabric_Client.newDefaultKeyValueStore({ path: store_path});
@@ -66,7 +66,7 @@ async function invoke() {
 		console.log('\n\nStart invoke processing');
 
 		// Use service discovery to initialize the channel
-		await channel.initialize({ discover: true, asLocalhost: true, target: peer });
+		await channel.initialize({ discover: true, asLocalhost: false, target: peer });
 		console.log('Used service discovery to initialize the channel');
 
 		// get a transaction id object based on the current user assigned to fabric client

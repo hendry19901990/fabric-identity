@@ -20,7 +20,7 @@ async function main() {
             console.log('Run the registerUser.js application before retrying');
             return;
         }
-
+        
         // Create a new gateway for connecting to our peer node.
         const gateway = new Gateway();
         await gateway.connect(ccpPath, { wallet, identity: 'user1', discovery: { enabled: true, asLocalhost: false, target: "peer0.hf-abl-io" } });
