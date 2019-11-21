@@ -13,7 +13,7 @@ const fs = require('fs');
 const path = require('path');
 const util = require('util');
 
-var org1tlscacert_path = path.resolve('/shared/crypto-config/peerOrganizations/hf-abl-io/tlsca/', 'tlsca.hf-abl-io-cert.pem');
+var org1tlscacert_path = path.resolve('/go/src/bitbucket.org/capitalblock/abl-dna-fabric-network-nodejs/configuration/crypto-config/peerOrganizations/hf-abl-io/tlsca/', 'tlsca.hf-abl-io-cert.pem');
 var org1tlscacert = fs.readFileSync(org1tlscacert_path, 'utf8');
 
 invoke();
